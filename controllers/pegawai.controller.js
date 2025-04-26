@@ -1,4 +1,5 @@
 const Pegawai = require('../models/pegawai.model');
+const { Sequelize } = require('sequelize');
 
 // Create new pegawai
 exports.createPegawai = async (req, res) => {
@@ -20,6 +21,64 @@ exports.getAllPegawai = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch pegawai', error: err.message });
   }
 };
+// jumlah yang sudah pensiun
+exports.getRetiredCount = async (req, res) => {
+  try {
+    console.log('getRetiredCount called with query params:', req.query);
+    const currentDate = new Date();
+
+    // Format date for SQL
+    const formattedDate = currentDate.toISOString().split('T')[0];
+
+    // Use prepared statements with parameter binding
+    const params = [];
+    let whereClause = `WHERE tmt_pensiun < ?`;
+    params.push(formattedDate);
+
+    // Add filter for induk_unit if provided
+    if (req.query.induk_unit) {
+      whereClause += ` AND induk_unit = ?`;
+      params.push(req.query.induk_unit);
+    }
+
+    // Add filter for golongan if provided
+    if (req.query.golongan) {
+      whereClause += ` AND golongan = ?`;
+      params.push(req.query.golongan);
+    }
+
+    // Add filter for unit_kerja if provided
+    if (req.query.unit_kerja) {
+      whereClause += ` AND unit_kerja = ?`;
+      params.push(req.query.unit_kerja);
+    }
+
+    // Add filter for jabatan if provided
+    if (req.query.jabatan) {
+      whereClause += ` AND jabatan = ?`;
+      params.push(req.query.jabatan);
+    }
+
+    console.log('SQL query:', `SELECT COUNT(*) as count FROM pegawai ${whereClause}`);
+    console.log('Parameters:', params);
+
+    const { sequelize } = require('../config/db.config');
+    const [results] = await sequelize.query(`SELECT COUNT(*) as count FROM pegawai ${whereClause}`, {
+      replacements: params,
+      type: sequelize.QueryTypes.SELECT,
+      logging: console.log
+    });
+
+    const retiredCount = parseInt(results.count, 10);
+    console.log('Query result:', retiredCount);
+
+    res.status(200).json({ retiredCount });
+  } catch (err) {
+    console.error('Error in getRetiredCount:', err);
+    res.status(500).json({ message: 'Failed to fetch retired employees count', error: err.message });
+  }
+};
+
 
 // Get pegawai by NIP
 exports.getPegawaiByNIP = async (req, res) => {
