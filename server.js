@@ -1,20 +1,32 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');  // Import cors
+const cors = require('cors');
 const { sequelize } = require('./config/db.config');
 const pegawaiRoutes = require('./routes/pegawai.routes');
 
 const app = express();
 
-// CORS Configuration - Allow requests from port 8080
+// Environment Configuration
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const isDevelopment = NODE_ENV === 'development';
+
+// Log current environment
+console.log(`Server running in ${NODE_ENV} mode`);
+
+// Determine the correct domain based on environment
+const frontendDomain = isDevelopment
+  ? process.env.DEV_DOMAIN
+  : process.env.PROD_DOMAIN;
+
+// CORS Configuration
 const corsOptions = {
-  origin: 'http://localhost:5173',  // Sesuaikan dengan origin frontend
+  origin: frontendDomain,
   methods: 'GET,POST,PUT,DELETE',
   allowedHeaders: 'Content-Type,Authorization',
 };
 
 // Use the CORS middleware
-app.use(cors(corsOptions));  // Apply CORS middleware
+app.use(cors(corsOptions));
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
