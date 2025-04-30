@@ -8,7 +8,7 @@ const app = express();
 
 // CORS Configuration - Allow requests from port 8080
 const corsOptions = {
-  origin: 'http://localhost:8080',  // Sesuaikan dengan origin frontend
+  origin: 'http://localhost:5173',  // Sesuaikan dengan origin frontend
   methods: 'GET,POST,PUT,DELETE',
   allowedHeaders: 'Content-Type,Authorization',
 };

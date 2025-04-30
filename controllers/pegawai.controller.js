@@ -1,12 +1,12 @@
 const Pegawai = require('../models/pegawai.model');
-const { Sequelize } = require('sequelize');
+const { Sequelize, Op } = require('sequelize');
 
 // Create new pegawai
 exports.createPegawai = async (req, res) => {
   try {
     const { nip, nama, golongan, tmt_pensiun, unit_kerja, induk_unit, jabatan } = req.body;
     const newPegawai = await Pegawai.create({ nip, nama, golongan, tmt_pensiun, unit_kerja, induk_unit, jabatan });
-    res.status(201).json(newPegawai); // Tidak perlu bungkus dalam {data: newPegawai}
+    res.status(201).json(newPegawai);
   } catch (err) {
     res.status(500).json({ message: 'Failed to create pegawai', error: err.message });
   }
@@ -15,62 +15,110 @@ exports.createPegawai = async (req, res) => {
 // Read all pegawai
 exports.getAllPegawai = async (req, res) => {
   try {
+    if (Object.keys(req.query).length > 0) {
+      return exports.filterPegawai(req, res);
+    }
+
     const pegawaiList = await Pegawai.findAll();
-    res.status(200).json(pegawaiList);  // Tidak perlu bungkus dalam {data: pegawaiList}
+    res.status(200).json(pegawaiList);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch pegawai', error: err.message });
   }
 };
-// jumlah yang sudah pensiun
+
+// Filter pegawai
+exports.filterPegawai = async (req, res) => {
+  try {
+    console.log('filterPegawai called with query params:', req.query);
+
+    const whereClause = {};
+
+    if (req.query.induk_unit) {
+      whereClause.induk_unit = {
+        [Op.substring]: req.query.induk_unit  // Untuk MySQL. Gunakan Op.iLike untuk PostgreSQL
+      };
+    }
+
+    if (req.query.golongan) {
+      whereClause.golongan = {
+        [Op.substring]: req.query.golongan
+      };
+    }
+
+    if (req.query.unit_kerja) {
+      whereClause.unit_kerja = {
+        [Op.substring]: req.query.unit_kerja
+      };
+    }
+
+    if (req.query.jabatan) {
+      whereClause.jabatan = {
+        [Op.substring]: req.query.jabatan
+      };
+    }
+
+    if (req.query.isRetired === 'true') {
+      whereClause.tmt_pensiun = {
+        [Op.lt]: new Date()
+      };
+    } else if (req.query.isRetired === 'false') {
+      whereClause.tmt_pensiun = {
+        [Op.gte]: new Date()
+      };
+    }
+
+    console.log('Final whereClause:', whereClause);
+
+    const filteredPegawai = await Pegawai.findAll({
+      where: whereClause,
+      order: [['nama', 'ASC']]
+    });
+
+    return res.status(200).json(filteredPegawai);
+  } catch (err) {
+    console.error('Error in filterPegawai:', err);
+    res.status(500).json({ message: 'Failed to filter pegawai', error: err.message });
+  }
+};
+
+// Get jumlah pensiunan
 exports.getRetiredCount = async (req, res) => {
   try {
     console.log('getRetiredCount called with query params:', req.query);
-    const currentDate = new Date();
 
-    // Format date for SQL
-    const formattedDate = currentDate.toISOString().split('T')[0];
+    const whereClause = {
+      tmt_pensiun: { [Op.lt]: new Date() }
+    };
 
-    // Use prepared statements with parameter binding
-    const params = [];
-    let whereClause = `WHERE tmt_pensiun < ?`;
-    params.push(formattedDate);
-
-    // Add filter for induk_unit if provided
     if (req.query.induk_unit) {
-      whereClause += ` AND induk_unit = ?`;
-      params.push(req.query.induk_unit);
+      whereClause.induk_unit = {
+        [Op.substring]: req.query.induk_unit
+      };
     }
 
-    // Add filter for golongan if provided
     if (req.query.golongan) {
-      whereClause += ` AND golongan = ?`;
-      params.push(req.query.golongan);
+      whereClause.golongan = {
+        [Op.substring]: req.query.golongan
+      };
     }
 
-    // Add filter for unit_kerja if provided
     if (req.query.unit_kerja) {
-      whereClause += ` AND unit_kerja = ?`;
-      params.push(req.query.unit_kerja);
+      whereClause.unit_kerja = {
+        [Op.substring]: req.query.unit_kerja
+      };
     }
 
-    // Add filter for jabatan if provided
     if (req.query.jabatan) {
-      whereClause += ` AND jabatan = ?`;
-      params.push(req.query.jabatan);
+      whereClause.jabatan = {
+        [Op.substring]: req.query.jabatan
+      };
     }
 
-    console.log('SQL query:', `SELECT COUNT(*) as count FROM pegawai ${whereClause}`);
-    console.log('Parameters:', params);
+    console.log('Filter where clause:', JSON.stringify(whereClause, null, 2));
 
-    const { sequelize } = require('../config/db.config');
-    const [results] = await sequelize.query(`SELECT COUNT(*) as count FROM pegawai ${whereClause}`, {
-      replacements: params,
-      type: sequelize.QueryTypes.SELECT,
-      logging: console.log
+    const retiredCount = await Pegawai.count({
+      where: whereClause
     });
-
-    const retiredCount = parseInt(results.count, 10);
-    console.log('Query result:', retiredCount);
 
     res.status(200).json({ retiredCount });
   } catch (err) {
@@ -79,14 +127,13 @@ exports.getRetiredCount = async (req, res) => {
   }
 };
 
-
 // Get pegawai by NIP
 exports.getPegawaiByNIP = async (req, res) => {
   const { nip } = req.params;
   try {
     const pegawai = await Pegawai.findByPk(nip);
     if (!pegawai) return res.status(404).json({ message: 'Pegawai not found' });
-    res.status(200).json(pegawai);  // Tidak perlu bungkus dalam {data: pegawai}
+    res.status(200).json(pegawai);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch pegawai', error: err.message });
   }
@@ -108,7 +155,7 @@ exports.updatePegawai = async (req, res) => {
     pegawai.jabatan = jabatan || pegawai.jabatan;
 
     await pegawai.save();
-    res.status(200).json(pegawai);  // Tidak perlu bungkus dalam {data: pegawai}
+    res.status(200).json(pegawai);
   } catch (err) {
     res.status(500).json({ message: 'Failed to update pegawai', error: err.message });
   }
@@ -121,7 +168,7 @@ exports.deletePegawai = async (req, res) => {
     const pegawai = await Pegawai.findByPk(nip);
     if (!pegawai) return res.status(404).json({ message: 'Pegawai not found' });
     await pegawai.destroy();
-    res.status(200).json({ message: 'Pegawai deleted successfully' });  // Tidak perlu bungkus dalam {data: success message}
+    res.status(200).json({ message: 'Pegawai deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Failed to delete pegawai', error: err.message });
   }
