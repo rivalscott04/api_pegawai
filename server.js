@@ -23,6 +23,7 @@ const corsOptions = {
   origin: frontendDomain,
   methods: 'GET,POST,PUT,DELETE',
   allowedHeaders: 'Content-Type,Authorization',
+  credentials: true
 };
 
 // Use the CORS middleware
