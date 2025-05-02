@@ -8,8 +8,10 @@ router.get('/stats', guestController.getAttendanceStats);
 // Get guest by slug
 router.get('/slug/:slug', guestController.getGuestBySlug);
 
-// Mark guest as attended
+// Attendance endpoints
 router.put('/:id/attend', guestController.markAttended);
+router.put('/:id/not-attend', guestController.markNotAttending);
+router.put('/slug/:slug/attendance', guestController.updateAttendanceBySlug);
 
 // CRUD operations
 router.post('/', guestController.createGuest);
