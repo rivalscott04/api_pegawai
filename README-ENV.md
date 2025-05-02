@@ -29,17 +29,26 @@ Aplikasi ini mendukung mode development dan production.
    ```
    # Environment
    NODE_ENV=development # atau production
-   
+
    # Server Configuration
    PORT=3000
-   DEV_DOMAIN=http://localhost:5173
-   PROD_DOMAIN=https://yourdomain.com
-   
-   # Database Configuration
+
+   # Frontend Domains
+   DEV_DOMAINS=http://localhost:5173,http://localhost:8081
+   PROD_PEGAWAI_DOMAIN=https://sdm.rivaldev.site
+   PROD_WEDDING_DOMAIN=https://wedding.rivaldev.site
+
+   # Primary Database Configuration (SDM)
    DB_HOST=localhost
    DB_USER=root
    DB_PASSWORD=
    DB_NAME=sdm
+
+   # Wedding Invitation Database Configuration
+   WEDDING_DB_HOST=localhost
+   WEDDING_DB_USER=root
+   WEDDING_DB_PASSWORD=
+   WEDDING_DB_NAME=wedding_invitation
    ```
 
 ### Menjalankan Aplikasi
@@ -63,6 +72,8 @@ npm start
 
 - `NODE_ENV`: Set ke `development` atau `production`
 - `PORT`: Port server akan berjalan
-- `DEV_DOMAIN`: Domain frontend untuk development (untuk CORS)
-- `PROD_DOMAIN`: Domain frontend untuk production (untuk CORS)
-- `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`: Konfigurasi database
+- `DEV_DOMAINS`: Daftar domain frontend untuk development (dipisahkan dengan koma, untuk CORS)
+- `PROD_PEGAWAI_DOMAIN`: Domain frontend untuk pegawai di production (untuk CORS)
+- `PROD_WEDDING_DOMAIN`: Domain frontend untuk wedding invitation di production (untuk CORS)
+- `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`: Konfigurasi database pegawai
+- `WEDDING_DB_HOST`, `WEDDING_DB_USER`, `WEDDING_DB_PASSWORD`, `WEDDING_DB_NAME`: Konfigurasi database wedding invitation
