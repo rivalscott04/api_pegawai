@@ -5,6 +5,7 @@ const { sequelize } = require('./config/db.config');
 const { weddingSequelize } = require('./config/wedding_db.config');
 const pegawaiRoutes = require('./routes/pegawai.routes');
 const weddingRoutes = require('./routes/wedding.routes');
+const authRoutes = require('./routes/auth.routes');
 
 const app = express();
 
@@ -64,6 +65,7 @@ if (isDevelopment) {
 app.use(express.json());
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/pegawai', pegawaiRoutes);
 app.use('/api/wedding', weddingRoutes);
 
