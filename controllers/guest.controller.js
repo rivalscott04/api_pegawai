@@ -171,11 +171,26 @@ exports.updateAttendanceBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
 
+    console.log('Request URL:', req.originalUrl);
+    console.log('Request method:', req.method);
     console.log('Request body:', req.body);
     console.log('Request params:', req.params);
 
     // Get the attendance value from the request body
-    const attendingValue = req.body.attending;
+    // Log the entire request body to see what's being sent
+    console.log('Full request body:', JSON.stringify(req.body));
+
+    // Try to get the attendance value from various possible properties
+    let attendingValue;
+    if (req.body.attending !== undefined) {
+      attendingValue = req.body.attending;
+    } else if (req.body.attended !== undefined) {
+      attendingValue = req.body.attended;
+    } else {
+      // If no attendance value is provided, default to true (assuming they're confirming attendance)
+      attendingValue = true;
+      console.log('No attendance value provided, defaulting to true');
+    }
 
     console.log('Updating attendance for slug:', slug, 'with value:', attendingValue);
 

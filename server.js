@@ -1,6 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
 const { sequelize } = require('./config/db.config');
 const { weddingSequelize } = require('./config/wedding_db.config');
 const pegawaiRoutes = require('./routes/pegawai.routes');
@@ -16,50 +15,77 @@ const isDevelopment = NODE_ENV === 'development';
 // Log current environment
 console.log(`Server running in ${NODE_ENV} mode`);
 
-// CORS handling based on environment
-if (isDevelopment) {
-  // In development mode, manually handle CORS with very permissive settings
-  console.log('Using manual CORS handling for development - allowing all origins');
+// CORS handling for all environments
+console.log('Setting up CORS handling');
 
-  // Add CORS headers to all responses
-  app.use((req, res, next) => {
-    // Allow requests from any origin in development
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+// Define allowed origins based on environment
+const allowedOrigins = isDevelopment
+  ? process.env.DEV_DOMAINS.split(',')
+  : [
+      process.env.PROD_PEGAWAI_DOMAIN,
+      process.env.PROD_WEDDING_DOMAIN
+    ].filter(Boolean);
+
+console.log('Allowed origins:', allowedOrigins);
+
+// Add specific routes to handle the problematic endpoint
+app.options('/api/wedding/guests/:slug/attendance', (req, res) => {
+  console.log('Handling OPTIONS request for attendance endpoint');
+
+  // Set CORS headers
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+
+  // Respond with 200 OK
+  res.status(200).end();
+});
+
+// Add a direct route handler for the attendance endpoint
+const guestController = require('./controllers/guest.controller');
+app.put('/api/wedding/guests/:slug/attendance', (req, res, next) => {
+  console.log('Direct PUT handler for attendance endpoint');
+  // Set CORS headers
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+
+  // Pass to the controller
+  guestController.updateAttendanceBySlug(req, res, next);
+});
+
+app.post('/api/wedding/guests/:slug/attendance', (req, res, next) => {
+  console.log('Direct POST handler for attendance endpoint');
+  // Set CORS headers
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+
+  // Pass to the controller
+  guestController.updateAttendanceBySlug(req, res, next);
+});
+
+// Global CORS middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  // Check if the origin is allowed or if we're in development mode
+  if (isDevelopment || !origin || allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');
+  }
 
-    // Handle preflight requests
-    if (req.method === 'OPTIONS') {
-      return res.status(200).end();
-    }
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS request for:', req.originalUrl);
+    return res.status(200).end();
+  }
 
-    next();
-  });
-} else {
-  // In production, use the cors middleware with specific origins
-  const allowedOrigins = [
-    process.env.PROD_PEGAWAI_DOMAIN,
-    process.env.PROD_WEDDING_DOMAIN
-  ].filter(Boolean);
-
-  console.log('Using production CORS configuration with origins:', allowedOrigins);
-
-  const corsOptions = {
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: 'GET,POST,PUT,DELETE',
-    allowedHeaders: 'Content-Type,Authorization',
-    credentials: true
-  };
-
-  app.use(cors(corsOptions));
-}
+  next();
+});
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
