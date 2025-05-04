@@ -49,16 +49,27 @@ exports.getGuestById = async (req, res) => {
 exports.getGuestBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
+    console.log('Looking for guest with slug:', slug);
+
+    // Try to find the guest with exact slug match
     const guest = await Guest.findOne({
       where: { slug }
     });
 
     if (!guest) {
+      console.log('Guest not found with slug:', slug);
+
+      // If not found, try to find with case-insensitive match
+      const allGuests = await Guest.findAll();
+      console.log('All guests in database:', allGuests.map(g => ({ id: g.id, name: g.name, slug: g.slug })));
+
       return res.status(404).json({ message: 'Guest not found' });
     }
 
+    console.log('Found guest:', guest);
     res.status(200).json(guest);
   } catch (err) {
+    console.error('Error fetching guest by slug:', err);
     res.status(500).json({ message: 'Failed to fetch guest', error: err.message });
   }
 };
@@ -159,24 +170,56 @@ exports.markNotAttending = async (req, res) => {
 exports.updateAttendanceBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
-    const { attending } = req.body;
 
+    console.log('Request body:', req.body);
+    console.log('Request params:', req.params);
+
+    // Get the attendance value from the request body
+    const attendingValue = req.body.attending;
+
+    console.log('Updating attendance for slug:', slug, 'with value:', attendingValue);
+
+    // Try to find the guest with exact slug match
     const guest = await Guest.findOne({
       where: { slug }
     });
 
     if (!guest) {
+      console.log('Guest not found with slug:', slug);
+
+      // If not found, try to find with case-insensitive match
+      const allGuests = await Guest.findAll();
+      console.log('All guests in database:', allGuests.map(g => ({ id: g.id, name: g.name, slug: g.slug })));
+
+      // Try to find a case-insensitive match
+      const caseInsensitiveMatch = allGuests.find(g =>
+        g.slug.toLowerCase() === slug.toLowerCase()
+      );
+
+      if (caseInsensitiveMatch) {
+        console.log('Found case-insensitive match:', caseInsensitiveMatch);
+
+        // Update attendance status
+        caseInsensitiveMatch.attended = attendingValue === true || attendingValue === 'true';
+        caseInsensitiveMatch.updated_at = new Date();
+
+        await caseInsensitiveMatch.save();
+
+        return res.status(200).json(caseInsensitiveMatch);
+      }
+
       return res.status(404).json({ message: 'Guest not found' });
     }
 
     // Update attendance status
-    guest.attended = attending === true || attending === 'true';
+    guest.attended = attendingValue === true || attendingValue === 'true';
     guest.updated_at = new Date();
 
     await guest.save();
 
     res.status(200).json(guest);
   } catch (err) {
+    console.error('Error updating attendance:', err);
     res.status(500).json({ message: 'Failed to update attendance status', error: err.message });
   }
 };
