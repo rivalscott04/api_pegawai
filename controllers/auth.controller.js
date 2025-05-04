@@ -5,32 +5,48 @@ const jwt = require('jsonwebtoken');
 exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
+    console.log('Login attempt for username:', username);
 
     // Validate input
     if (!username || !password) {
-      return res.status(400).json({ 
+      console.log('Login failed: Username or password missing');
+      return res.status(400).json({
         success: false,
-        message: 'Username and password are required' 
+        message: 'Username and password are required'
       });
     }
 
     // Find user by username
     const user = await User.findOne({ where: { username } });
-    
+    console.log('User found:', user ? 'Yes' : 'No');
+
     // Check if user exists
     if (!user) {
-      return res.status(401).json({ 
+      console.log('Login failed: User not found');
+      return res.status(401).json({
         success: false,
-        message: 'Invalid credentials' 
+        message: 'Invalid credentials'
       });
     }
 
+    // Log user details (excluding password)
+    console.log('User details:', {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      passwordLength: user.password ? user.password.length : 0
+    });
+
     // Check if password is correct
+    console.log('Comparing password...');
     const isPasswordValid = await user.isValidPassword(password);
+    console.log('Password valid:', isPasswordValid);
+
     if (!isPasswordValid) {
-      return res.status(401).json({ 
+      console.log('Login failed: Invalid password');
+      return res.status(401).json({
         success: false,
-        message: 'Invalid credentials' 
+        message: 'Invalid credentials'
       });
     }
 
@@ -53,10 +69,10 @@ exports.login = async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: 'Failed to login', 
-      error: err.message 
+      message: 'Failed to login',
+      error: err.message
     });
   }
 };
@@ -68,18 +84,18 @@ exports.register = async (req, res) => {
 
     // Validate input
     if (!username || !password) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: 'Username and password are required' 
+        message: 'Username and password are required'
       });
     }
 
     // Check if user already exists
     const existingUser = await User.findOne({ where: { username } });
     if (existingUser) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: 'Username already exists' 
+        message: 'Username already exists'
       });
     }
 
@@ -100,10 +116,10 @@ exports.register = async (req, res) => {
     });
   } catch (err) {
     console.error('Registration error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: 'Failed to register user', 
-      error: err.message 
+      message: 'Failed to register user',
+      error: err.message
     });
   }
 };
@@ -114,24 +130,24 @@ exports.getCurrentUser = async (req, res) => {
     const user = await User.findByPk(req.user.id, {
       attributes: ['id', 'username', 'role']
     });
-    
+
     if (!user) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        message: 'User not found' 
+        message: 'User not found'
       });
     }
-    
+
     res.status(200).json({
       success: true,
       user
     });
   } catch (err) {
     console.error('Get current user error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: 'Failed to get user information', 
-      error: err.message 
+      message: 'Failed to get user information',
+      error: err.message
     });
   }
 };

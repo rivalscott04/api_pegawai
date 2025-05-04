@@ -1,10 +1,13 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const { sequelize } = require('./config/db.config');
 const { weddingSequelize } = require('./config/wedding_db.config');
 const pegawaiRoutes = require('./routes/pegawai.routes');
 const weddingRoutes = require('./routes/wedding.routes');
 const authRoutes = require('./routes/auth.routes');
+const pensiunRoutes = require('./routes/pensiun.routes');
+const jenisPensiunRoutes = require('./routes/jenis_pensiun.routes');
 
 const app = express();
 
@@ -90,14 +93,25 @@ app.use((req, res, next) => {
 // Middleware to parse JSON request bodies
 app.use(express.json());
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/pegawai', pegawaiRoutes);
 app.use('/api/wedding', weddingRoutes);
+app.use('/api/pensiun', pensiunRoutes);
+app.use('/api/jenis-pensiun', jenisPensiunRoutes);
+
+// Initialize jenis pensiun data
+const jenisPensiunController = require('./controllers/jenis_pensiun.controller');
 
 // Sync Primary Database (SDM)
 sequelize.sync().then(() => {
   console.log("Primary database (SDM) synced");
+
+  // Initialize default jenis pensiun data after database sync
+  jenisPensiunController.initializeJenisPensiun();
 }).catch((err) => {
   console.log("Error syncing primary database: ", err);
 });

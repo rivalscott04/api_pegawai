@@ -173,3 +173,85 @@ exports.deletePegawai = async (req, res) => {
     res.status(500).json({ message: 'Failed to delete pegawai', error: err.message });
   }
 };
+
+// Get tempat kerja (combined induk_unit and unit_kerja)
+exports.getTempatKerja = async (req, res) => {
+  try {
+    console.log('getTempatKerja called with query params:', req.query);
+
+    const whereClause = {};
+
+    // Add filters if provided in query params
+    if (req.query.nip) {
+      whereClause.nip = {
+        [Op.substring]: req.query.nip
+      };
+    }
+
+    if (req.query.induk_unit) {
+      whereClause.induk_unit = {
+        [Op.substring]: req.query.induk_unit
+      };
+    }
+
+    if (req.query.unit_kerja) {
+      whereClause.unit_kerja = {
+        [Op.substring]: req.query.unit_kerja
+      };
+    }
+
+    if (req.query.golongan) {
+      whereClause.golongan = {
+        [Op.substring]: req.query.golongan
+      };
+    }
+
+    if (req.query.jabatan) {
+      whereClause.jabatan = {
+        [Op.substring]: req.query.jabatan
+      };
+    }
+
+    if (req.query.nama) {
+      whereClause.nama = {
+        [Op.substring]: req.query.nama
+      };
+    }
+
+    if (req.query.isRetired === 'true') {
+      whereClause.tmt_pensiun = {
+        [Op.lt]: new Date()
+      };
+    } else if (req.query.isRetired === 'false') {
+      whereClause.tmt_pensiun = {
+        [Op.gte]: new Date()
+      };
+    }
+
+    // Get all pegawai with the applied filters
+    const pegawaiList = await Pegawai.findAll({
+      where: whereClause,
+      order: [['nama', 'ASC']]
+    });
+
+    // Transform the data to combine induk_unit and unit_kerja
+    const tempatKerjaList = pegawaiList.map(pegawai => {
+      const { nip, nama, golongan, tmt_pensiun, induk_unit, unit_kerja, jabatan } = pegawai;
+      return {
+        nip,
+        nama,
+        golongan,
+        tmt_pensiun,
+        induk_unit,
+        unit_kerja,
+        jabatan,
+        tempat_kerja: `${induk_unit} - ${unit_kerja}`
+      };
+    });
+
+    res.status(200).json(tempatKerjaList);
+  } catch (err) {
+    console.error('Error in getTempatKerja:', err);
+    res.status(500).json({ message: 'Failed to fetch tempat kerja data', error: err.message });
+  }
+};

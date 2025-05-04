@@ -21,10 +21,16 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
     defaultValue: 'user',
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: true,
   }
 }, {
   tableName: 'users',
   timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
   hooks: {
     beforeCreate: async (user) => {
       if (user.password) {
@@ -43,7 +49,17 @@ const User = sequelize.define('User', {
 
 // Instance method to check password
 User.prototype.isValidPassword = async function(password) {
-  return await bcrypt.compare(password, this.password);
+  console.log('isValidPassword called with password length:', password ? password.length : 0);
+  console.log('Stored password hash:', this.password);
+
+  try {
+    const result = await bcrypt.compare(password, this.password);
+    console.log('bcrypt.compare result:', result);
+    return result;
+  } catch (error) {
+    console.error('Error in password comparison:', error);
+    return false;
+  }
 };
 
 module.exports = User;
