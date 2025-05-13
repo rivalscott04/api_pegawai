@@ -29,6 +29,11 @@ const allowedOrigins = isDevelopment
       process.env.PROD_WEDDING_DOMAIN
     ].filter(Boolean);
 
+// Explicitly add sasak.merariq.info to allowed origins
+if (!allowedOrigins.includes('https://sasak.merariq.info')) {
+  allowedOrigins.push('https://sasak.merariq.info');
+}
+
 console.log('Allowed origins:', allowedOrigins);
 
 // Add specific routes to handle the problematic endpoint
