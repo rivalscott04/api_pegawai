@@ -255,3 +255,30 @@ exports.getTempatKerja = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch tempat kerja data', error: err.message });
   }
 };
+
+// === Pencarian Pegawai untuk Surat (Best Practice) ===
+exports.searchPegawaiForSurat = async (req, res) => {
+  try {
+    const { nip, nama } = req.query;
+    const whereClause = {};
+    // Validasi minimal panjang query
+    if (nip && nip.length >= 5) {
+      whereClause.nip = { [Op.startsWith]: nip };
+    } else if (nama && nama.length >= 4) {
+      whereClause.nama = { [Op.substring]: nama };
+    } else {
+      // Query terlalu pendek/kosong, return array kosong
+      return res.status(200).json([]);
+    }
+    // Selalu pakai LIMIT
+    const pegawaiList = await Pegawai.findAll({
+      where: whereClause,
+      order: [['nama', 'ASC']],
+      limit: 20,
+    });
+    res.status(200).json(pegawaiList);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to search pegawai', error: err.message });
+  }
+};
+// === End Pencarian Pegawai untuk Surat ===

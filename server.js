@@ -2,12 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const { sequelize } = require('./config/db.config');
-const { weddingSequelize } = require('./config/wedding_db.config');
 const pegawaiRoutes = require('./routes/pegawai.routes');
-const weddingRoutes = require('./routes/wedding.routes');
 const authRoutes = require('./routes/auth.routes');
 const pensiunRoutes = require('./routes/pensiun.routes');
 const jenisPensiunRoutes = require('./routes/jenis_pensiun.routes');
+const letterRoutes = require('./routes/letter.routes');
 
 const app = express();
 
@@ -24,55 +23,11 @@ console.log('Setting up CORS handling');
 // Define allowed origins based on environment
 const allowedOrigins = isDevelopment
   ? process.env.DEV_DOMAINS.split(',')
-  : [
-      process.env.PROD_PEGAWAI_DOMAIN,
-      process.env.PROD_WEDDING_DOMAIN
-    ].filter(Boolean);
-
-// Explicitly add sasak.merariq.info to allowed origins
-if (!allowedOrigins.includes('https://sasak.merariq.info')) {
-  allowedOrigins.push('https://sasak.merariq.info');
-}
+  : [process.env.PROD_PEGAWAI_DOMAIN].filter(Boolean);
 
 console.log('Allowed origins:', allowedOrigins);
 
-// Add specific routes to handle the problematic endpoint
-app.options('/api/wedding/guests/:slug/attendance', (req, res) => {
-  console.log('Handling OPTIONS request for attendance endpoint');
 
-  // Set CORS headers
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-
-  // Respond with 200 OK
-  res.status(200).end();
-});
-
-// Add a direct route handler for the attendance endpoint
-const guestController = require('./controllers/guest.controller');
-app.put('/api/wedding/guests/:slug/attendance', (req, res, next) => {
-  console.log('Direct PUT handler for attendance endpoint');
-  // Set CORS headers
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-
-  // Pass to the controller
-  guestController.updateAttendanceBySlug(req, res, next);
-});
-
-app.post('/api/wedding/guests/:slug/attendance', (req, res, next) => {
-  console.log('Direct POST handler for attendance endpoint');
-  // Set CORS headers
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-
-  // Pass to the controller
-  guestController.updateAttendanceBySlug(req, res, next);
-});
 
 // Global CORS middleware
 app.use((req, res, next) => {
@@ -104,28 +59,21 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/pegawai', pegawaiRoutes);
-app.use('/api/wedding', weddingRoutes);
 app.use('/api/pensiun', pensiunRoutes);
 app.use('/api/jenis-pensiun', jenisPensiunRoutes);
+app.use(letterRoutes);
 
 // Initialize jenis pensiun data
 const jenisPensiunController = require('./controllers/jenis_pensiun.controller');
 
-// Sync Primary Database (SDM)
+// Sync Database
 sequelize.sync().then(() => {
-  console.log("Primary database (SDM) synced");
+  console.log("Database synced");
 
   // Initialize default jenis pensiun data after database sync
   jenisPensiunController.initializeJenisPensiun();
 }).catch((err) => {
-  console.log("Error syncing primary database: ", err);
-});
-
-// Sync Wedding Invitation Database
-weddingSequelize.sync().then(() => {
-  console.log("Wedding invitation database synced");
-}).catch((err) => {
-  console.log("Error syncing wedding invitation database: ", err);
+  console.log("Error syncing database: ", err);
 });
 
 const PORT = process.env.PORT || 3000;

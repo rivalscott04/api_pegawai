@@ -20,6 +20,7 @@ router.put('/:nip', pegawaiController.updatePegawai);
 router.delete('/:nip', pegawaiController.deletePegawai);
 
 // Get by NIP (put this last to avoid catching other routes)
+router.get('/search-surat', pegawaiController.searchPegawaiForSurat);
 router.get('/:nip', pegawaiController.getPegawaiByNIP);
 
 module.exports = router;
