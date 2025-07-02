@@ -7,7 +7,7 @@ exports.createLetter = async (req, res) => {
     const { letter_type, nomor_surat, tanggal_surat, perihal, content, employees, signatures, created_by } = req.body;
     // Validasi field wajib
     if (!letter_type || !nomor_surat || !tanggal_surat || !perihal || !content || !created_by) {
-      return res.status(400).json({ message: 'Field wajib tidak boleh kosong' });
+      return res.status(400).json({ message: 'Field wajib tidak boleh kosong (termasuk letter_type)' });
     }
     // Buat surat
     const newLetter = await Letter.create({

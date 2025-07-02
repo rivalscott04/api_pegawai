@@ -10,6 +10,7 @@ const Letter = sequelize.define('Letter', {
   letter_type: {
     type: DataTypes.STRING,
     allowNull: false,
+    comment: 'Jenis surat, misal: SURAT_TUGAS, SURAT_KEPUTUSAN, NOTA_DINAS, dll',
   },
   nomor_surat: {
     type: DataTypes.STRING,

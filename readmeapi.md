@@ -94,4 +94,33 @@ API ini digunakan untuk manajemen berbagai jenis surat (Surat Tugas, Nota Dinas,
 
 ## 📞 Support
 
-Jika ada pertanyaan terkait struktur atau integrasi, silakan hubungi tim FE. 
+Jika ada pertanyaan terkait struktur atau integrasi, silakan hubungi tim FE.
+
+# Endpoint Surat
+
+## POST /api/letters
+
+### Request Body
+- `letter_type` (**string, required**): Jenis surat, contoh: `SURAT_TUGAS`, `SURAT_KEPUTUSAN`, `NOTA_DINAS`, dll. Field ini digunakan untuk membedakan format dan field input surat.
+- `nomor_surat` (string, required): Nomor surat.
+- `tanggal_surat` (string, required): Tanggal surat (format YYYY-MM-DD).
+- `perihal` (string, required): Perihal surat.
+- `content` (object, required): Data dinamis sesuai kebutuhan jenis surat.
+- `created_by` (integer, required): ID user pembuat surat.
+- (opsional) `employees`, `signatures`: Data pegawai dan tanda tangan jika diperlukan.
+
+### Contoh Request
+```json
+{
+  "letter_type": "SURAT_KEPUTUSAN",
+  "nomor_surat": "123",
+  "tanggal_surat": "2025-07-01",
+  "perihal": "Penetapan Gelar",
+  "content": { /* data dinamis */ },
+  "created_by": 1
+}
+```
+
+### Penjelasan
+- Field `letter_type` WAJIB diisi dan digunakan backend untuk membedakan logika, format, dan field input surat.
+- Setiap jenis surat dapat memiliki struktur `content` yang berbeda sesuai kebutuhan. 
