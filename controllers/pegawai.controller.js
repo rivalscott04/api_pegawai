@@ -51,6 +51,11 @@ exports.getAllPegawai = async (req, res) => {
     const total = await Pegawai.count({ where: whereClause });
     const totalPages = Math.ceil(total / limit);
 
+    // Hitung jumlah pensiun (retired) sesuai filter
+    const retiredWhere = { ...whereClause, tmt_pensiun: { [Op.lt]: new Date() } };
+    const retired = await Pegawai.count({ where: retiredWhere });
+    const active = total - retired;
+
     // Ambil data dengan pagination
     const data = await Pegawai.findAll({
       where: whereClause,
@@ -62,6 +67,8 @@ exports.getAllPegawai = async (req, res) => {
     return res.status(200).json({
       data,
       total,
+      retired,
+      active,
       totalPages,
       page,
       limit
