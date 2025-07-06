@@ -15,70 +15,65 @@ exports.createPegawai = async (req, res) => {
 // Read all pegawai
 exports.getAllPegawai = async (req, res) => {
   try {
-    if (Object.keys(req.query).length > 0) {
-      return exports.filterPegawai(req, res);
+    // Ambil parameter pagination dan filter
+    let { page = 1, limit = 10, golongan, induk_unit, unit_kerja, jabatan, isRetired, search } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+    const offset = (page - 1) * limit;
+
+    // Build where clause
+    const whereClause = {};
+    if (golongan) {
+      whereClause.golongan = { [Op.substring]: golongan };
+    }
+    if (induk_unit) {
+      whereClause.induk_unit = { [Op.substring]: induk_unit };
+    }
+    if (unit_kerja) {
+      whereClause.unit_kerja = { [Op.substring]: unit_kerja };
+    }
+    if (jabatan) {
+      whereClause.jabatan = { [Op.substring]: jabatan };
+    }
+    if (isRetired === 'true') {
+      whereClause.tmt_pensiun = { [Op.lt]: new Date() };
+    } else if (isRetired === 'false') {
+      whereClause.tmt_pensiun = { [Op.gte]: new Date() };
+    }
+    if (search) {
+      whereClause[Op.or] = [
+        { nama: { [Op.substring]: search } },
+        { nip: { [Op.substring]: search } }
+      ];
     }
 
-    const pegawaiList = await Pegawai.findAll();
-    res.status(200).json(pegawaiList);
+    // Hitung total hasil filter
+    const total = await Pegawai.count({ where: whereClause });
+    const totalPages = Math.ceil(total / limit);
+
+    // Ambil data dengan pagination
+    const data = await Pegawai.findAll({
+      where: whereClause,
+      order: [['nama', 'ASC']],
+      offset,
+      limit
+    });
+
+    return res.status(200).json({
+      data,
+      total,
+      totalPages,
+      page,
+      limit
+    });
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch pegawai', error: err.message });
   }
 };
 
-// Filter pegawai
+// Filter pegawai (redirect ke getAllPegawai agar response konsisten)
 exports.filterPegawai = async (req, res) => {
-  try {
-    console.log('filterPegawai called with query params:', req.query);
-
-    const whereClause = {};
-
-    if (req.query.induk_unit) {
-      whereClause.induk_unit = {
-        [Op.substring]: req.query.induk_unit  // Untuk MySQL. Gunakan Op.iLike untuk PostgreSQL
-      };
-    }
-
-    if (req.query.golongan) {
-      whereClause.golongan = {
-        [Op.substring]: req.query.golongan
-      };
-    }
-
-    if (req.query.unit_kerja) {
-      whereClause.unit_kerja = {
-        [Op.substring]: req.query.unit_kerja
-      };
-    }
-
-    if (req.query.jabatan) {
-      whereClause.jabatan = {
-        [Op.substring]: req.query.jabatan
-      };
-    }
-
-    if (req.query.isRetired === 'true') {
-      whereClause.tmt_pensiun = {
-        [Op.lt]: new Date()
-      };
-    } else if (req.query.isRetired === 'false') {
-      whereClause.tmt_pensiun = {
-        [Op.gte]: new Date()
-      };
-    }
-
-    console.log('Final whereClause:', whereClause);
-
-    const filteredPegawai = await Pegawai.findAll({
-      where: whereClause,
-      order: [['nama', 'ASC']]
-    });
-
-    return res.status(200).json(filteredPegawai);
-  } catch (err) {
-    console.error('Error in filterPegawai:', err);
-    res.status(500).json({ message: 'Failed to filter pegawai', error: err.message });
-  }
+  return exports.getAllPegawai(req, res);
 };
 
 // Get jumlah pensiunan
