@@ -1,4 +1,4 @@
-const Pegawai = require('../models/pegawai.model');
+const Pegawai = require('../../models/pegawai/pegawai.model');
 const { Sequelize, Op } = require('sequelize');
 
 // Create new pegawai
@@ -264,7 +264,7 @@ exports.searchPegawaiForSurat = async (req, res) => {
     const { nip, nama } = req.query;
     const whereClause = {};
     // Validasi minimal panjang query
-    if (nip && nip.length >= 5) {
+    if (nip && nip.length >= 4) {
       whereClause.nip = { [Op.startsWith]: nip };
     } else if (nama && nama.length >= 4) {
       whereClause.nama = { [Op.substring]: nama };

@@ -1,4 +1,4 @@
-const { Letter, LetterEmployee, LetterSignature } = require('../models');
+const { Letter, LetterEmployee, LetterSignature } = require('../../models');
 const { Op } = require('sequelize');
 
 // Create new letter

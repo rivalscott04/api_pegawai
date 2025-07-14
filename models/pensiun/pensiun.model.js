@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/db.config');
-const Pegawai = require('./pegawai.model');
-const JenisPensiun = require('./jenis_pensiun.model');
+const { sequelize } = require('../../config/db.config');
+const Pegawai = require('../pegawai/pegawai.model');
+const JenisPensiun = require('../jenis-pensiun/jenis_pensiun.model');
 
 const Pensiun = sequelize.define('Pensiun', {
   id: {

@@ -1,6 +1,6 @@
-const Pensiun = require('../models/pensiun.model');
-const Pegawai = require('../models/pegawai.model');
-const JenisPensiun = require('../models/jenis_pensiun.model');
+const Pensiun = require('../../models/pensiun/pensiun.model');
+const Pegawai = require('../../models/pegawai/pegawai.model');
+const JenisPensiun = require('../../models/jenis-pensiun/jenis_pensiun.model');
 const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs');

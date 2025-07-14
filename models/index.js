@@ -1,6 +1,6 @@
-const Letter = require('./letter.model');
-const LetterEmployee = require('./letter_employee.model');
-const LetterSignature = require('./letter_signature.model');
+const Letter = require('./letter/letter.model');
+const LetterEmployee = require('./letter/letter_employee.model');
+const LetterSignature = require('./letter/letter_signature.model');
 
 // Definisikan relasi antar model
 Letter.hasMany(LetterEmployee, { foreignKey: 'letter_id', as: 'employees' });

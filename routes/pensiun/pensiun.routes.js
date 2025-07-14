@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const pensiunController = require('../controllers/pensiun.controller');
-const upload = require('../middleware/upload.middleware');
-const { verifyToken } = require('../middleware/auth.middleware');
+const pensiunController = require('../../controllers/pensiun/pensiun.controller');
+const upload = require('../../middleware/upload.middleware');
+const { verifyToken } = require('../../middleware/auth.middleware');
 
 // Apply authentication middleware to all routes
 router.use(verifyToken);

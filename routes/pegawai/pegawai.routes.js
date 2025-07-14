@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pegawaiController = require('../controllers/pegawai.controller');
+const pegawaiController = require('../../controllers/pegawai/pegawai.controller');
 
 // Specific routes first (order matters in Express)
 router.get('/retired-count', pegawaiController.getRetiredCount);

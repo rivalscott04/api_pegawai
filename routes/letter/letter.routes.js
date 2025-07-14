@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const letterController = require('../controllers/letter.controller');
+const letterController = require('../../controllers/letter/letter.controller');
 
 // List/filter surat
 router.get('/api/letters', letterController.listLetters);

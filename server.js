@@ -2,11 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const { sequelize } = require('./config/db.config');
-const pegawaiRoutes = require('./routes/pegawai.routes');
-const authRoutes = require('./routes/auth.routes');
-const pensiunRoutes = require('./routes/pensiun.routes');
-const jenisPensiunRoutes = require('./routes/jenis_pensiun.routes');
-const letterRoutes = require('./routes/letter.routes');
+const pegawaiRoutes = require('./routes/pegawai/pegawai.routes');
+const authRoutes = require('./routes/auth/auth.routes');
+const pensiunRoutes = require('./routes/pensiun/pensiun.routes');
+const jenisPensiunRoutes = require('./routes/jenis-pensiun/jenis_pensiun.routes');
+const letterRoutes = require('./routes/letter/letter.routes');
 
 const app = express();
 
@@ -64,7 +64,7 @@ app.use('/api/jenis-pensiun', jenisPensiunRoutes);
 app.use(letterRoutes);
 
 // Initialize jenis pensiun data
-const jenisPensiunController = require('./controllers/jenis_pensiun.controller');
+const jenisPensiunController = require('./controllers/jenis-pensiun/jenis_pensiun.controller');
 
 // Sync Database
 sequelize.sync().then(() => {

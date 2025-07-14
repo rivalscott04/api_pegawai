@@ -1,4 +1,4 @@
-const JenisPensiun = require('../models/jenis_pensiun.model');
+const JenisPensiun = require('../../models/jenis-pensiun/jenis_pensiun.model');
 
 // Get all jenis pensiun
 exports.getAllJenisPensiun = async (req, res) => {
